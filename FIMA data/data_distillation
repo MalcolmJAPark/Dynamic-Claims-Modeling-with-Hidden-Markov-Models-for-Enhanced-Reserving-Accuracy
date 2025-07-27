@@ -1,0 +1,8 @@
+Temporal/Identification fields
+- dateOfLoss: use to build time series (e.g., monthly counts), plot time series of # of claims per month (frequency)
+- asOfDate: use for data-currency checks and to align "cut off" for reserving runs. Data-currency check to verify that this project will only work with claims data up through a known "asOfDate" so that we do not inadvertently work with insurance records that are not fully resolved. Reserving "cut offs" allow for us to treat anything after the "cut off" "asOfDate' will be taken as Incurred But Not Reported (IBNR) which we can use to project reserves. Hence, our Hidden Markov Model (HMM) will train fully on observed data, increasing accuracy.
+- id: unique record key to prevent duplication.
+
+Exposure/Policy Characteristics
+- policyCount: use as proxy to measure exposure in each period (i.e., number of active policies in force each period), plot claims per policy which translates into frequency per exposure.
+- state: provideds geographic segmentation (for stratified HMM structure but this will take much longer - train an HMM model per geographic location), due to heterogeneous risk profiles (some states are known to flood more easily than others) and the notion that each location has its own flood-zone distribution, building practice, elevation differences, and local mitigation efforts.
