@@ -16,6 +16,6 @@ This project demonstrates probabilistic modeling and state estimation, reserving
 - [ ] Phase 2:
 * Data acquisition and preparation: download a public claims dataset (for this project, it was decided to use FIMA NFIP Redacted Claims, a dataset offered by FEMA including over 2 million redacted National Flood Insurance Program (NFIP) claims transactions, updated monthly, and is accessible for public use with tools like SQL for analysis).
 [link to FIMA website API](https://www.fema.gov/openfema-data-page/fima-nfip-redacted-claims-v2)
-* Data Cleaning: Parse policy-level claim counts and severities by time period (e.g., quarterly) and handle missing values, outliers; aggregate exposures if needed.
+* Data Cleaning: Parse policy-level claim counts and severities by time period (e.g., quarterly) and handle missing values, outliers; aggregate exposures if needed (benefit with using FIMA data is pre-cleaned to use but SQL is needed for use due to its large size to prevent data loss).
 * Exploratory Data Analysis: Plot claim counts over time and generate visual history of severities. Compute sumamry statistics by periods and look for signs of **regime changes** (e.g., spikes in frequency and/or severity).
 - [ ] Phase 3:
