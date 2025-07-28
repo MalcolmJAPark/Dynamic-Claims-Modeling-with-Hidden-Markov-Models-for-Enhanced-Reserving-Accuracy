@@ -59,3 +59,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+## example usage python3 expo_pol.py --ids-file my_ids.txt --out exposure.csv
