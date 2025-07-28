@@ -11,7 +11,7 @@ Build an Hidden Markov Model (HMM) based model to capture the **latent risk stat
 This project demonstrates probabilistic modeling and state estimation, reserving (IBNR estimation), and statistical inference and validation (e.g., EM algorithm and log-likelihood training)
 
 ## Project Roadmap
-- [ ] Phase 1:
+- [X] Phase 1:
 * Environment and tools: set up a python environment with hmmlearn, numpy, pandas, scipy, matplotlib (libraries that may be used).
 - [ ] Phase 2:
 * Data acquisition and preparation: download a public claims dataset (for this project, it was decided to use FIMA NFIP Redacted Claims, a dataset offered by FEMA including over 2 million redacted National Flood Insurance Program (NFIP) claims transactions, updated monthly, and is accessible for public use with tools like SQL for analysis).
