@@ -6,3 +6,21 @@ Temporal/Identification fields
 Exposure/Policy Characteristics
 - policyCount: use as proxy to measure exposure in each period (i.e., number of active policies in force each period), plot claims per policy which translates into frequency per exposure.
 - state: provideds geographic segmentation (for stratified HMM structure but this will take much longer - train an HMM model per geographic location), due to heterogeneous risk profiles (some states are known to flood more easily than others) and the notion that each location has its own flood-zone distribution, building practice, elevation differences, and local mitigation efforts.
+- totalBuildingInsuranceCoverage & totalContentsInsuranceCoverage: indicates exposure size to normalize severity, scatter plot of coverage amount vs. claim severity
+
+Structural/Risk Indicators
+- ratedFloodZone: zone classification correlates strongly with claim magnitude --> more severely rated zones have high degree of insurance claims, plot boxplot of claim severity by flood zone.
+- elevationDifference: Depth of first flood entry above Base Flood Elevation (BFE, computed elevation to which floodwater is anticipated to rise during 1-percent-annual-chance flood event); a continuous risk factor, plot Density/histogram of elevationDifference for paid claims.
+- postFIRMConstructionIndicator: Construction vintage influences risk; use as a covarite
+- primaryResidenceIndicator: Occupancy type (primary vs. secondary) to explain claim frequency.
+
+Claim Severity Fields
+- amountPaidOnBuildingClaim
+- amountPaidOnContentsClaim
+- amountPaidOnIncreasedCostOfComplianceClaim
+- netBuildingPaymentAmount & netContentsPaymentAmount:
+  * combine to total paid = building + contents + ICC
+  * plot histogram of total paid; log-scale density for heavy tails - distribution has heavy tails when its prob of very large (or small) values decays slower than in the familiar thin-tailed families (ex. normal)
+
+
+Continuously updating (07/28/2025)
