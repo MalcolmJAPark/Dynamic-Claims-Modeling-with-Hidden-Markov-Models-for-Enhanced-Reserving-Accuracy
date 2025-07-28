@@ -41,3 +41,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+## example usage python3 temp_ident.py --ids-file my_ids.txt --out subset_claims.csv
