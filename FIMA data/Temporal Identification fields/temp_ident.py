@@ -1,45 +1,64 @@
 #!/usr/bin/env python3
 import argparse
 import requests
+from itertools import islice
 
 API_ENDPOINT = "https://www.fema.gov/api/open/v2/FimaNfipClaims"
-FIELDS       = "id,dateOfLoss,asOfDate"
+FIELDS       = ["id","dateOfLoss","asOfDate"]
 
-def download_by_ids(ids, output_path):
-    # build an OData “in” filter: id in ('ID1','ID2',…)
-    # note: make sure ids list isn’t huge, or chunk it
-    quoted = ",".join(f"'{i}'" for i in ids)
-    filter_str = f"id in ({quoted})"
+def chunked(it, size):
+    it = iter(it)
+    while True:
+        c = list(islice(it, size))
+        if not c: break
+        yield c
 
+def fetch_chunk(ids_chunk):
+    # build "id eq '…' or id eq '…'" filter
+    clauses = [f"id eq '{i}'" for i in ids_chunk]
+    flt = " or ".join(clauses)
     params = {
-        "$select": FIELDS,
-        "$format": "csv",
-        "$filter": filter_str
+        "$select": ",".join(FIELDS),
+        "$filter": flt,
+        "$format": "csv"
     }
-
-    with requests.get(API_ENDPOINT, params=params, stream=True) as r:
-        r.raise_for_status()
-        with open(output_path, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-
-    print(f"Wrote {output_path} for {len(ids)} IDs")
+    r = requests.get(API_ENDPOINT, params=params, stream=True)
+    r.raise_for_status()
+    return r.iter_lines(decode_unicode=True)
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ids-file",   required=True,
-                        help="Text file with one ID per line")
-    parser.add_argument("--out",        default="claims_subset.csv",
-                        help="Output CSV file name")
-    args = parser.parse_args()
+    p = argparse.ArgumentParser(
+        description="Fetch id, dateOfLoss, asOfDate for a list of FEMA claim IDs"
+    )
+    p.add_argument("--ids-file", required=True,
+                   help="One claim ID per line")
+    p.add_argument("--out", default="claims.csv",
+                   help="Output CSV filename")
+    p.add_argument("--chunk-size", type=int, default=25,
+                   help="How many IDs per request")
+    args = p.parse_args()
 
-    # read IDs
+    # read all IDs
     with open(args.ids_file) as f:
-        ids = [line.strip() for line in f if line.strip()]
+        ids = [l.strip() for l in f if l.strip()]
+    if not ids:
+        p.error("No IDs in " + args.ids_file)
 
-    download_by_ids(ids, args.out)
+    first = True
+    with open(args.out, "w", newline="") as fout:
+        for chunk in chunked(ids, args.chunk_size):
+            lines = fetch_chunk(chunk)
+            header = next(lines)
+            if first:
+                fout.write(header + "\n")
+                first = False
+            # skip header on subsequent chunks
+            for line in lines:
+                fout.write(line + "\n")
 
-if __name__ == "__main__":
+    print(f"Wrote {args.out} ({len(ids)} IDs in {args.chunk_size}-size chunks)")
+
+if __name__=="__main__":
     main()
 
-## example usage python3 temp_ident.py --ids-file my_ids.txt --out subset_claims.csv
+## example usage python3 temp_ident.py --ids-file ids.txt --out claims.csv
