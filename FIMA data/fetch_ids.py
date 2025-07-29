@@ -34,4 +34,4 @@ if __name__=="__main__":
     main()
 
 
-## example usage: python3 fetch_ids.py --limit 50 --out my_ids.txt
+## example usage: python3 fetch_ids.py --limit 500 --out ids.txt
