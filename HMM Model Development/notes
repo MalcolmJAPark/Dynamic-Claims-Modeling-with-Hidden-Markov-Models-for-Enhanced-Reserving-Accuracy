@@ -18,3 +18,8 @@ counts = np.array([C_1, C_2, …, C_T])          # shape (T,)
 logs   = np.array([L_1, L_2, …, L_T])          # shape (T,)
 X = np.column_stack([counts, logs])           # shape (T,2) for multivariate HMM
 ```
+
+Prototype the HMM
+* Custom EM for Poisson + Log-Normal:
+To get true Poisson + Log-Normal:
+    
