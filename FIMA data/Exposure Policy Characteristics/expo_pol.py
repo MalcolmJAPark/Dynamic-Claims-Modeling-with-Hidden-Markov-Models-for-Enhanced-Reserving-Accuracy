@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import requests
+from itertools import islice
 
-# FEMA NFIP Claims endpoint
 API_ENDPOINT = "https://www.fema.gov/api/open/v2/FimaNfipClaims"
-# Fields we want (including id so you can join back if needed)
 FIELDS = [
     "id",
     "policyCount",
@@ -13,51 +12,69 @@ FIELDS = [
     "totalContentsInsuranceCoverage"
 ]
 
-def download_by_ids(ids, output_path):
-    """
-    Streams a CSV from the FEMA API for the given IDs.
-    """
-    # Build OData filter: id in ('ID1','ID2',...)
-    quoted = ",".join(f"'{i}'" for i in ids)
-    filter_str = f"id in ({quoted})"
+def chunked(iterable, size):
+    """Yield successive size-sized chunks from iterable."""
+    it = iter(iterable)
+    while True:
+        chunk = list(islice(it, size))
+        if not chunk:
+            break
+        yield chunk
 
+def fetch_chunk(ids_chunk):
+    """Fetch a CSV lines iterator for one chunk of IDs."""
+    # build "id eq '…' or id eq '…'" filter
+    clauses = [f"id eq '{i}'" for i in ids_chunk]
+    filter_str = " or ".join(clauses)
     params = {
         "$select": ",".join(FIELDS),
-        "$format": "csv",
-        "$filter": filter_str
+        "$filter": filter_str,
+        "$format": "csv"
     }
-
-    with requests.get(API_ENDPOINT, params=params, stream=True) as r:
-        r.raise_for_status()
-        with open(output_path, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-
-    print(f"Wrote {output_path} for {len(ids)} IDs")
+    r = requests.get(API_ENDPOINT, params=params, stream=True)
+    r.raise_for_status()
+    return r.iter_lines(decode_unicode=True)
 
 def main():
-    p = argparse.ArgumentParser(
-        description="Fetch exposure fields for specified FEMA NFIP Claims IDs"
+    parser = argparse.ArgumentParser(
+        description="Fetch exposure fields for a list of FEMA claim IDs"
     )
-    p.add_argument(
+    parser.add_argument(
         "--ids-file", required=True,
         help="Text file with one claim ID per line"
     )
-    p.add_argument(
+    parser.add_argument(
         "--out", default="exposure.csv",
-        help="Output CSV file name"
+        help="Output CSV filename"
     )
-    args = p.parse_args()
+    parser.add_argument(
+        "--chunk-size", type=int, default=25,
+        help="How many IDs to include per request"
+    )
+    args = parser.parse_args()
 
-    # Read IDs
+    # load IDs
     with open(args.ids_file) as f:
         ids = [line.strip() for line in f if line.strip()]
     if not ids:
-        p.error("No IDs found in --ids-file")
+        parser.error("No IDs found in --ids-file")
 
-    download_by_ids(ids, args.out)
+    first = True
+    with open(args.out, "w", newline="") as fout:
+        for chunk in chunked(ids, args.chunk_size):
+            lines = fetch_chunk(chunk)
+            header = next(lines)
+            if first:
+                fout.write(header + "\n")
+                first = False
+            # skip header on subsequent chunks
+            for line in lines:
+                fout.write(line + "\n")
+
+    print(f"Wrote {args.out} for {len(ids)} IDs using {args.chunk_size}-ID chunks.")
 
 if __name__ == "__main__":
     main()
 
-## example usage python3 expo_pol.py --ids-file my_ids.txt --out exposure.csv
+## example usage python3 expo_pol.py --ids-file ids.txt --out exposure.csv
+
