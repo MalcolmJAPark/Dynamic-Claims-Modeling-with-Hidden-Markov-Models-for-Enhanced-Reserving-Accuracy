@@ -1,0 +1,20 @@
+Defining the 2 state HMM:
+* states S_t ∈ {0, 1} s.t. 0 = "low-risk", 1 = "high-risk"
+* emissions:
+  - Frequency is modeled as C_t | S_t = s ~ Pois(λ)
+  - Severity is modeled L_t = log(total paid at t) | S_t = s ~ N(μ_s, (σ_s)^2)
+  i.e., log-transform each period's total paid so that a Normal emission approximates a log-normal distribution.
+* Model paramaters θ include {π_s, a_i,j, λ_s​, μ_s, σ_s} where π_s refers to the intial states probability P(S_1 = s), a_i,j refers to the transition matrix P(S_t = j | S_(t-1) = i), and λ_s refers to Poisson rates, and μ_s, σ_s the Normal means and stdev.
+
+Preprocess and assembling observation sequence:
+* Aggregating raw data into equally spaced time periods (monthly):
+  - C_t = # of claims in month t
+  - paid_t = sum_(claims in t) (building + contents + ICC)
+  - L_t = log(paid_t + ε) where ε is used to prevent log(0)
+* Form training sequence
+
+```python
+counts = np.array([C_1, C_2, …, C_T])          # shape (T,)
+logs   = np.array([L_1, L_2, …, L_T])          # shape (T,)
+X = np.column_stack([counts, logs])           # shape (T,2) for multivariate HMM
+```
