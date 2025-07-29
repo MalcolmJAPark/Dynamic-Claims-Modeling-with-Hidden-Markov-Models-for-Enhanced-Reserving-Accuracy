@@ -32,3 +32,10 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+## example usages python3 initial_parameters.py 
+# Initial estimates:
+#  λ̂  = 1.7200 (mean count)
+#  μ̂  = 3.7442 (mean log-severity)
+#  σ̂  = 10.2208 (std  log-severity)
