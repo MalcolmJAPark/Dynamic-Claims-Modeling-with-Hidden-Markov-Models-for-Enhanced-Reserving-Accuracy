@@ -44,3 +44,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+## example usage python3 plot_claims_frequency.py -i claims.csv -o frequency.png
