@@ -71,4 +71,5 @@ def main():
 if __name__ == "__main__":
     main()
 
-## example usage python3 struct_risk.py --ids-file my_ids.txt --out structural.csv
+## example usage python3 struct_risk.py --ids-file ids.txt --out structural.csv
+
