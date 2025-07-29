@@ -4,7 +4,7 @@ Temporal/Identification fields
 - id: unique record key to prevent duplication.
 
 Exposure/Policy Characteristics
-- policyCount: use as proxy to measure exposure in each period (i.e., number of active policies in force each period), plot claims per policy which translates into frequency per exposure.
+- policyCount: use as proxy to measure exposure in each period (i.e., number of active policies in force each period)
 - state: provideds geographic segmentation (for stratified HMM structure but this will take much longer - train an HMM model per geographic location), due to heterogeneous risk profiles (some states are known to flood more easily than others) and the notion that each location has its own flood-zone distribution, building practice, elevation differences, and local mitigation efforts.
 - totalBuildingInsuranceCoverage & totalContentsInsuranceCoverage: indicates exposure size to normalize severity, scatter plot of coverage amount vs. claim severity
 
