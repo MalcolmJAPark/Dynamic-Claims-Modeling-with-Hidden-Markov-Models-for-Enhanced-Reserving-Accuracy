@@ -3,3 +3,9 @@ First, compute the posterior at asOfDate.
 * Run forward backward algorithm on historical claim counts and severities to get filtered probability of being in each latent state at the 
 end of observation window.
 * This gives P(S_T = l | data_{1:T}) for l ∈ {low-risk, high-risk}
+
+posterior_at_asofdate.py loads aggregated_quarterly.csv and intializes HMM parameters.
+Then, it runs forward-backward algorithm to compute the full smoothing posterior γ_t,k = P(S_t = k | data).
+Finally, it will print the filtered probabilities at the final period T:
+* P(S_T = low | data)
+* P(S_T = high | data)
