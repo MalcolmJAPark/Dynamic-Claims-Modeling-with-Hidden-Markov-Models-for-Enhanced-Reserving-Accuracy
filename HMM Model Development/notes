@@ -14,3 +14,44 @@ policyCount (exposure)
 quarter_start (timestamp for plot axes)
 
 To run: python3 aggregate_quarterly.py
+
+
+Second process is to create visualizations:
+plot n_t and S_t over time and check for outliers, trends, and seasonality. (computing summary statistics (mean, var) of n_t and log(severity))
+this will sanity-check aggregation and guide initialization.
+
+analyze_time_series.py runs with aggregated_quarterly.csv which compute and prints means and variances of n_claims and avg_log_severity, 
+detect outliers (|z|>3) and print out the quarter-periods, and produces: 
+Quarterly counts with a 4-quarter moving average and outliers (n_claims_time_series.png)
+Quarterly avg log severity with trend and outliers (avg_log_severity_time_series.png)
+Seasonality bar charts for counts (n_claims_seasonality.png)
+Seasonality bar charts for severity (avg_log_severity_seasonality.png)
+
+Third process is to prototype a 2-state HMM model on frequency (n_claims) only.
+We will be using hmmlearn's PoissonHMM (2 components) to fit {n_t} --> https://hmmlearn.readthedocs.io/en/latest/ and inspect learned 
+λ_low and λ_high and transition matrix. Then, plot log-likelihood vs. iteration to confirm convergence.
+
+fit_poisson_hmm.py runs with aggregated_quarterly.csv and fits a 2 state Poiss HMM to {n_t}.
+Then prints out the estimated Poiss means (λ_0, λ_1), trans matrix, and initial state of probabilities. Additionally saves a convergence 
+plot (hmm_log_likelihood.png) showing log-likelihood by EM iteration.
+
+Fourth process (only if third process works): to gain a truly joint model, roll out custom EM to specfiy 
+mixed emission distributions (Poisson + LogNormal).
+
+joint_hmm_em.py runs with aggregated_quarterly.csv and 
+* converts avg_log_severity back to severity via exp
+* intitalizes a 2-state HMM with:
+  * poiss emissions for counts (λ_k)
+  * Log-Normal emissions for severities (μ_k, σ_k)
+* Runs Baum-Welch EM loop (forward-backward + parameter updates)
+* Prints the final π, A, λ_k, μ_k, and σ_k
+* Saves a log-likelihood convergence plot (joint_hmm_em_loglikelihood.png)
+
+Fifth process is to decode states with Viterbi algorithm and validate that "high-risk" periods corresponds to spikes in counts/severity.
+To validate transition probabilities (e.g., P(low --> high) is relatively small).
+For visual confirmation of regime assignments, overlay on time series.
+
+decode_and_plot.py runs with aggregated_quarterly.csv and
+* runs custom em to estimate π, A, λ_k, μ_k, and σ_k
+* decodes the most likely state sequence via Viterbi
+* overlays the decoded regimes on two time-series (counts and avg log-severity)
