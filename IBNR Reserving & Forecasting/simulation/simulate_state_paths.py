@@ -96,3 +96,12 @@ if __name__ == "__main__":
 ## example usage: python3 simulate_state_paths.py
 ## for custom case, replace value for pi_T and A with fitted values: A - transition matrix from joint_hmm_em.py,
 ## and pi_T - filtered posterior at the cut off date from posterior_at_asofdate.py.
+
+## example return: 
+# Target transition matrix A:
+# [[0.87804812 0.12195188]
+#  [0.82820302 0.17179698]]
+
+# Empirical transition matrix from simulation:
+# [[0.87964748 0.12035252]
+#  [0.83468835 0.16531165]]
