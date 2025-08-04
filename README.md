@@ -18,7 +18,7 @@ This project demonstrates probabilistic modeling and state estimation, reserving
 [link to FIMA website API](https://www.fema.gov/openfema-data-page/fima-nfip-redacted-claims-v2)
 * Data Cleaning: Parse policy-level claim counts and severities by time period (e.g., quarterly) and handle missing values, outliers; aggregate exposures if needed (benefit with using FIMA data is pre-cleaned to use but SQL is needed for use due to its large size to prevent data loss).
 * Exploratory Data Analysis: Plot claim counts over time and generate visual history of severities. Compute sumamry statistics by periods and look for signs of **regime changes** (e.g., spikes in frequency and/or severity).
-- [ ] Phase 3:
+- [X] Phase 3:
 * State/Emission Distribution: start project with 2 states (low-risk vs. high-risk), s.t. for emissions, frequency is modeled after Poisson(λ) for state s and the severity is modeled after Log-Normal(μ, σ).
 * Implementing HMM: Prototype in Jupyter notebooks using hmmlearn (or write own EM loop depending on difficulty?) and fit model to the data's time-series of counts (and if possible a joint model for severity).
 * Validate Convergence: Track log-likelihood across EM iterations and check that transition matrix is logically sound (e.g., p(low --> high) is small).
