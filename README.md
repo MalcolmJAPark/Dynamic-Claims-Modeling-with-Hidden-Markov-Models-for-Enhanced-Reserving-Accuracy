@@ -23,7 +23,7 @@ This project demonstrates probabilistic modeling and state estimation, reserving
 * Implementing HMM: Prototype in Jupyter notebooks using hmmlearn (or write own EM loop depending on difficulty?) and fit model to the data's time-series of counts (and if possible a joint model for severity).
 * Validate Convergence: Track log-likelihood across EM iterations and check that transition matrix is logically sound (e.g., p(low --> high) is small).
 * State Decoding: to use Viterbi algorithm to assign each period to a latent state and plot decoded states vs. observed frequency/severity.
-- [] Phase 4:
+- [X] Phase 4:
 * Stimulate future quarterly claim counts and severities under each latent state path.
 * Estimate Incurred But Not Reported (IBNR) reserves by projecting beyond cut-off asOfDate.
 * Produce predictive distributions (mean, percentiles) of reserve requirements.
