@@ -1,25 +1,16 @@
-Defining the 2 state HMM:
-* states S_t ∈ {0, 1} s.t. 0 = "low-risk", 1 = "high-risk"
-* emissions:
-  - Frequency is modeled as C_t | S_t = s ~ Pois(λ)
-  - Severity is modeled L_t = log(total paid at t) | S_t = s ~ N(μ_s, (σ_s)^2)
-  i.e., log-transform each period's total paid so that a Normal emission approximates a log-normal distribution.
-* Model paramaters θ include {π_s, a_i,j, λ_s​, μ_s, σ_s} where π_s refers to the intial states probability P(S_1 = s), a_i,j refers to the transition matrix P(S_t = j | S_(t-1) = i), and λ_s refers to Poisson rates, and μ_s, σ_s the Normal means and stdev.
+First process is to decide time-step granularity: although monthly would be a common period in reserving work, but to smooth out the noise
+in claim counts data, use quarterly.
+To do so, we will aggregate the cleaned data into a time series, s.t.
+* frequency series: for each period t, count number of unique id's whose dateOfLoss falls in period
+* severity series: for each period t, compute a summary of severities 
+(S_t = 1/N_t \sum_{i:t_i=t} log(netBuildingPaymentAmount_i + netContentsPaymentAmount_i) where N_t is period's claim count.
+* exposure: record policyCount (normalized exposures) in each period.
 
-Preprocess and assembling observation sequence:
-* Aggregating raw data into equally spaced time periods (monthly):
-  - C_t = # of claims in month t
-  - paid_t = sum_(claims in t) (building + contents + ICC)
-  - L_t = log(paid_t + ε) where ε is used to prevent log(0)
-* Form training sequence
+aggregate_quarterly.py runs with combined_data_clean.csv and produces aggregated_quarterly.csv with columns:
+quarter (e.g. “2025Q1”)
+n_claims (frequency)
+avg_log_severity (severity)
+policyCount (exposure)
+quarter_start (timestamp for plot axes)
 
-```python
-counts = np.array([C_1, C_2, …, C_T])          # shape (T,)
-logs   = np.array([L_1, L_2, …, L_T])          # shape (T,)
-X = np.column_stack([counts, logs])           # shape (T,2) for multivariate HMM
-```
-
-Prototype the HMM
-* Custom EM for Poisson + Log-Normal:
-To get true Poisson + Log-Normal:
-    
+To run: python3 aggregate_quarterly.py
