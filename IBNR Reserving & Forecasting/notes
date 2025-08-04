@@ -1,0 +1,5 @@
+Logbook:
+First, compute the posterior at asOfDate.
+* Run forward backward algorithm on historical claim counts and severities to get filtered probability of being in each latent state at the 
+end of observation window.
+* This gives P(S_T = l | data_{1:T}) for l ∈ {low-risk, high-risk}
