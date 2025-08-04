@@ -22,5 +22,6 @@ Claim Severity Fields
   * combine to total paid = building + contents + ICC
   * plot histogram of total paid; log-scale density for heavy tails - distribution has heavy tails when its prob of very large (or small) values decays slower than in the familiar thin-tailed families (ex. normal)
 
+Difficult to deal with Null values in entries --> Drop id entries with null in row.
 
-Continuously updating (07/28/2025)
+Continuously updating (08/03/2025)
