@@ -22,6 +22,16 @@ Claim Severity Fields
   * combine to total paid = building + contents + ICC
   * plot histogram of total paid; log-scale density for heavy tails - distribution has heavy tails when its prob of very large (or small) values decays slower than in the familiar thin-tailed families (ex. normal)
 
-Difficult to deal with Null values in entries --> Drop id entries with null in row.
+Difficult to deal with Null values in entries --> Drop id entries with null in row of columsn that are used for HMM model design.
+Time index: dateOfLoss
+Claim identifiers: id
+Frequency: derived count
+Severity: netBuildingPaymentAmount, netContentsPaymentAmount
+Exposure: policyCount (± coverage columns)
+Covariates (if you’ll condition on them): state and structural indicators
+Cut-off control: asOfDate (for preprocessing only)
+
+In practice, our HMM input at each time step t could be a vector s.t.
+O_t = (#claims_t (from id, dateOfLoss), S_bar_t (avg severity from netPayment), policyCount_t (exposure), optional covariates)
 
 Continuously updating (08/03/2025)
