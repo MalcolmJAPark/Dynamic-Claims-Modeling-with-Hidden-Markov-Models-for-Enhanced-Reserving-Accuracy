@@ -42,3 +42,15 @@ def simulate_state_paths(A, initial_states, H):
 '''
 4. sanity check: Simulate a small batch (e.g., N = 1000, H = 4) and tabulate empirical transition freq vs. A to ensure sampler is correct.
 
+
+Next step is to integrate our state-conditional frequency and severity draws s.t. for each simulated path and quarter, we will:
+* draw a claim count: N_{i,h} ~ CountDist(λ_{s_{i,h}}) where s_{i,h} ∈ {0,1} is the latent state of path i in quarter T+h, and λ_0, λ_1 are 
+our poiss (NB) rates for low and high risk
+* draw severities for each claim: X^j_{i,h} ~ SeverityDist(θ_{s_{i,h}}), j=1,..., N_{i,h}, e.g.,
+    - Log-Normal(μ_0, σ_0), vs. (μ_1, σ_1), or
+    - Gamma(α_0, β_0), vs (α_1, β_1)
+* aggregate to get total dollars: C_{i,h} = sum^{N_{i,h}}_j=1 X^j_{i,h}.
+* store {N_{i,h}, C_{i,h}} for all i=1,..., N and h=1,..., H
+
+
+
