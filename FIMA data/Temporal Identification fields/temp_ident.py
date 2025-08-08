@@ -61,4 +61,4 @@ def main():
 if __name__=="__main__":
     main()
 
-## example usage python3 temp_ident.py --ids-file ids.txt --out claims.csv
+## example usage: python3 temp_ident.py --ids-file ids.txt --out claims.csv
