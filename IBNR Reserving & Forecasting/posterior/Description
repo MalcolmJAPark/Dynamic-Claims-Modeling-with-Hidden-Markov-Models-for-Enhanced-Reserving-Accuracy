@@ -1,0 +1,9 @@
+This script computes the filtered posterior probability of the current hidden state in a fitted two-state Hidden Markov Model (HMM) for insurance claim data, as of the most recent quarter in the input dataset. It:
+
+1. **Loads Data & Parameters** – Reads the aggregated quarterly claims dataset and the saved HMM parameters (`hmm_params.json`).
+2. **Builds Log-Emission Probabilities** – Uses a Poisson model for claim frequency and a Log-Normal model for severity, including severity terms only when observed.
+3. **Forward Algorithm** – Performs the forward recursion in log-space to compute `P(S_T | data_{1:T})` (the filtered posterior at the last time step).
+4. **Outputs Results** – Prints the as-of quarter, total sequence log-likelihood, and the posterior probability of being in each latent state (e.g., low-risk vs. high-risk).
+5. **Saves to JSON** – Optionally saves the posterior probabilities and metadata to `posterior_at_T.json` for use in downstream simulations or reserve projections.
+
+It can be run with default file paths or given custom dataset and parameter file paths via command-line arguments.
