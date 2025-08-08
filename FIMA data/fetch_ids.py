@@ -33,5 +33,4 @@ def main():
 if __name__=="__main__":
     main()
 
-
-## example usage: python3 fetch_ids.py --limit 500 --out ids.txt
+## python3 fetch_ids.py --limit 5000 --out ids.txt
