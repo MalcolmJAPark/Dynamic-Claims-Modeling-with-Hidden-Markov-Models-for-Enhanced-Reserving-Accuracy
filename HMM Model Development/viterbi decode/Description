@@ -1,0 +1,31 @@
+decode_and_plot.py
+Fits a **2‑state joint frequency–severity HMM** to quarterly claims, **decodes regimes** with Viterbi, and **plots** the results.
+
+Functionality:
+* **Loads data:** `aggregated_quarterly.csv`, sorted by `quarter_start`.
+
+  * Uses `n_claims` for **Poisson** frequency.
+  * Uses `avg_log_severity` (exponentiated back to level) for **Log‑Normal** severity.
+* **Initializes** a 2‑state HMM (balanced `π`, sticky `A`, spread-out λ/μ seeds).
+* **Fits via EM:**
+
+  * `forward_backward()` in log space to get posteriors (`gamma`, `xi`) and log‑likelihood.
+  * `m_step()` updates: initial probs `π`, transitions `A`, Poisson rates `λ`, and Log‑Normal params `μ, σ`.
+  * Stops when log‑likelihood stabilizes (tolerance-based).
+* **Decodes regimes:** `viterbi()` returns the most likely state per quarter.
+* **Plots & saves:**
+
+  * `viterbi_n_claims.png` — claim counts with points colored by decoded state (blue=low, red=high).
+  * `viterbi_avg_log_severity.png` — average log severity with the same state coloring.
+
+Usage Example:
+
+```bash
+python3 decode_and_plot.py
+```
+
+(Input: `aggregated_quarterly.csv`; outputs: the two PNG plots listed above.)
+
+Purpose in Project:
+* Provides a **joint** frequency–severity view of latent risk states, not just counts.
+* The plots give a quick sanity check that decoded regimes align with spikes or shifts.
