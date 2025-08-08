@@ -84,3 +84,6 @@ simulate_ibnr_reserves.py:
 
 simulate_ibnr_reserves.py is really forward "next-H" ultimate: we simulate future occurrences and treat all of them as "IBNR at T". While useful for planning not strict IBNR.
 The script strict_ibnr_at_T.py computes strict IBNR at the valuation date T: only claims already incurred by T but not yet reported (based on the lag tail P(L>T−t)).
+
+Bug: IBNR flag 1{L > -h} makes every future claim count as "IBNR at T", which is not strict IBNR.
+Bug: because historical realized counts N_t are known, the number still unreported at T should be Binomial(N_t, p_tail(T-t)), not poisson.
