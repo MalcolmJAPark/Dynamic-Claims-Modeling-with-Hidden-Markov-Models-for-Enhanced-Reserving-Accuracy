@@ -15,6 +15,10 @@ quarter_start (timestamp for plot axes)
 
 To run: python3 aggregate_quarterly.py
 
+Bug: filter to total_severity > 0 before counting -> undercount n_claims in quarters with zero-paid claims.
+Fix: compute n_claims from the unfiltered data; compute avg_log_severity from positive severities only.
+     pull exposure from exposure table or dedupe to one record per policy-period.
+
 
 Second process is to create visualizations:
 plot n_t and S_t over time and check for outliers, trends, and seasonality. (computing summary statistics (mean, var) of n_t and log(severity))
