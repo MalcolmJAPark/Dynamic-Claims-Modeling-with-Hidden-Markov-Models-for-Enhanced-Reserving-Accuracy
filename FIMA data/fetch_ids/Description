@@ -1,0 +1,23 @@
+fetch_ids.py
+This script retrieves claim record IDs from the FEMA NFIP Redacted Claims API and saves them to a text file.
+
+Functionality:
+
+Connects to the FEMA NFIP claims API endpoint (https://www.fema.gov/api/open/v2/FimaNfipClaims).
+
+Fetches a specified number of claim IDs (default: 100).
+
+Saves the IDs to a specified output file (default: ids.txt), one per line.
+
+Usage Example:
+
+bash
+Copy
+Edit
+python3 fetch_ids.py --limit 5000 --out ids.txt
+--limit: Number of IDs to fetch.
+
+--out: Output file to store IDs.
+
+Purpose in Project:
+Serves as an initial data acquisition step for the Dynamic Claims Modeling pipeline by collecting claim identifiers for subsequent detailed data retrieval.
