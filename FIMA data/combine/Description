@@ -1,0 +1,22 @@
+combine_data.py
+This script merges multiple FEMA NFIP claims CSV datasets into a single combined file for modeling and analysis.
+
+Functionality:
+
+* Reads claim IDs from `my_ids.txt` (one UUID per line).
+* Filters four datasets to include only those IDs:
+  * `subset_claims.csv` (date-related fields)
+  * `exposure.csv` (policy exposure data)
+  * `structural.csv` (structural/risk attributes)
+  * `severity.csv` (claim payment amounts)
+* Merges datasets sequentially using **left joins** to preserve all IDs, even if some datasets are missing information for them.
+* Saves the merged dataset as `combined_data.csv`.
+
+Usage Example:
+
+```bash
+python3 combine_data.py
+```
+
+Purpose in Project:
+Consolidates the separate data retrieval outputs into one structured dataset, enabling downstream analysis and Hidden Markov Model fitting without repeated joins or filtering.
