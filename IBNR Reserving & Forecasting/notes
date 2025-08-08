@@ -10,6 +10,9 @@ Finally, it will print the filtered probabilities at the final period T:
 * P(S_T = low | data)
 * P(S_T = high | data)
 
+Bug: prints a posterior using initialized (unfitted) parameters unless manually plug in EM-fitted
+Fix: make s.t. accept fitted params and call forward-backward once.
+
 The next step is to simulate future latent-state trajectories since counts, severities, and reserves depends (hangs) off these params.
 Concretely:
 1. simulation parameters: N number of Monte Carlo paths (e.g., 5000 - 10000 to get stable percentiles
