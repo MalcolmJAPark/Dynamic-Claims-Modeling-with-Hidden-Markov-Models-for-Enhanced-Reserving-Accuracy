@@ -1,0 +1,37 @@
+simulate_state_paths.py
+Simulates future latent state trajectories for a 2-state Hidden Markov Model (HMM) given a transition matrix and the filtered posterior probabilities of the most recent state.
+
+* **Inputs:**
+
+  * Initial state probabilities (`pi_T`) from the filtered posterior at the cutoff date.
+  * Transition matrix (`A`) from an HMM fit (e.g., `joint_hmm_em.py`).
+  * Number of Monte Carlo paths (`N`) and forecast horizon in quarters (`H`).
+* **Functionality:**
+
+  1. Samples initial states at time T from `pi_T`.
+  2. Simulates forward `H` steps using the transition probabilities in `A`.
+  3. Optionally computes the *empirical* transition matrix from the simulated data.
+* **Output:**
+
+  * Prints the target vs. empirical transition matrices.
+  * Can be adapted to produce simulated state sequences for downstream modeling.
+
+---
+
+simulate_frequency_severity.py
+Generates Monte Carlo simulations of both claim **frequency** (counts) and **severity** (loss amounts) over future periods using pre-fitted HMM parameters.
+
+* **Inputs:**
+
+  * Initial state probabilities (`pi_T`), transition matrix (`A`), Poisson claim rates (`lambdas`), and severity distribution parameters (`mus`, `sigmas`).
+  * Choice of severity distribution: lognormal (default) or gamma.
+  * Number of Monte Carlo paths (`N`) and forecast horizon (`H`).
+* **Functionality:**
+
+  1. Samples initial latent states at time T.
+  2. Simulates forward state trajectories.
+  3. For each future quarter and path, draws a claim count from a Poisson distribution and severities from the chosen severity distribution.
+  4. Aggregates the simulated data into a long-form DataFrame.
+* **Output:**
+
+  * Saves results to `simulated_claims.csv` containing path, horizon, state, number of claims, and total loss per period.
