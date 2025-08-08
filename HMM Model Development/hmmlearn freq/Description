@@ -1,0 +1,51 @@
+fit_poisson_hmm.py
+This script fits a **Poisson Hidden Markov Model (HMM)** to quarterly claim count data to capture latent risk regimes (e.g., low-risk vs. high-risk periods).
+
+Functionality:
+
+1. **Load Data**
+
+   * Reads the quarterly aggregated dataset (e.g., `aggregated_quarterly.csv`).
+   * Sorts by `quarter_start`.
+
+2. **Prepare Observations**
+
+   * Extracts `n_claims` as the observation sequence.
+   * Reshapes data into a 2D array for `hmmlearn`.
+
+3. **Fit Poisson HMM**
+
+   * Uses `hmmlearn.hmm.PoissonHMM` with:
+
+     * `n_components` = number of latent states (default: 2)
+     * EM algorithm with up to `n_iter` iterations
+     * Convergence tolerance = 1e-4
+     * Random seed for reproducibility
+   * Trains on the claim count time series.
+
+4. **Extract & Display Parameters**
+
+   * **Poisson rates** (`λ`) for each state.
+   * **State transition matrix**.
+   * **Initial state distribution**.
+
+5. **Convergence Plot**
+
+   * Tracks log-likelihood over EM iterations.
+   * Saves the plot as `hmm_log_likelihood.png`.
+
+Usage Example:
+
+```bash
+python3 fit_poisson_hmm.py
+```
+
+(Default input: `aggregated_quarterly.csv`)
+
+Purpose in Project:
+Provides a **frequency-only HMM baseline**, estimating:
+
+* Expected claim counts per state
+* Probability of remaining in or switching between states
+* Convergence behavior of the EM algorithm
+  These parameters inform downstream modeling steps, such as joint frequency–severity HMMs and reserve forecasting.
