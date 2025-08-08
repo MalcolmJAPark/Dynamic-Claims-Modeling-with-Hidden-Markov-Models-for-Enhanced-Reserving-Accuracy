@@ -1,0 +1,28 @@
+claim_severity.py
+This script retrieves **claim severity–related payment fields** for a given list of FEMA NFIP claim IDs and saves them to a CSV file.
+
+Functionality:
+
+* Reads claim IDs from an input file (one per line).
+* Fetches the following fields from the **FEMA NFIP Redacted Claims API**:
+  * `id`
+  * `amountPaidOnBuildingClaim`
+  * `amountPaidOnContentsClaim`
+  * `amountPaidOnIncreasedCostOfComplianceClaim`
+  * `netBuildingPaymentAmount`
+  * `netContentsPaymentAmount`
+* Handles large lists of IDs by chunking API requests (default: 25 IDs per request).
+* Writes results to a CSV file, ensuring the header is included only once.
+
+Usage Example:
+
+```bash
+python3 fetch_claim.py --ids-file ids.txt --out severity.csv --chunk-size 25
+```
+
+* `--ids-file`: Path to file containing claim IDs (one per line).
+* `--out`: Output CSV filename (default: `severity.csv`).
+* `--chunk-size`: Number of IDs per API request (default: 25).
+
+Purpose in Project:
+Collects **severity-related payout amounts** for claims, which are essential for modeling claim loss distributions and estimating severity parameters in the Hidden Markov Model.
