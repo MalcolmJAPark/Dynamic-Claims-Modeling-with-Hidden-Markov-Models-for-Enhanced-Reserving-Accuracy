@@ -1,110 +1,114 @@
 # posterior_at_asofdate.py
-
+import json
 import numpy as np
 import pandas as pd
 from scipy.special import logsumexp, gammaln
+import sys
 
+# ---------- emissions ----------
 def log_poisson_pmf(k, lam):
-    """Log of Poisson PMF."""
-    return k * np.log(lam + 1e-16) - lam - gammaln(k + 1)
+    lam = np.maximum(lam, 1e-8)
+    return k * np.log(lam) - lam - gammaln(k + 1)
 
 def log_lognormal_pdf(x, mu, sigma):
-    """Log of LogNormal PDF."""
-    return -np.log(x * sigma * np.sqrt(2 * np.pi) + 1e-16) - ((np.log(x) - mu) ** 2) / (2 * sigma ** 2)
+    sigma = np.maximum(sigma, 1e-6)
+    return -np.log(x * sigma * np.sqrt(2*np.pi) + 1e-16) - ((np.log(x) - mu)**2) / (2 * sigma**2)
 
-def initialize_parameters(counts, sev, n_states=2):
-    """Initialize HMM parameters."""
-    mean_count = counts.mean()
-    mean_log_sev = np.log(sev).mean()
-    std_log_sev = np.log(sev).std()
-    
-    pi = np.full(n_states, 1.0 / n_states)
-    A = np.full((n_states, n_states), (1 - 0.1) / (n_states - 1))
-    np.fill_diagonal(A, 0.9)
-    
-    lambdas = np.linspace(mean_count * 0.5, mean_count * 1.5, n_states)
-    mus = np.linspace(mean_log_sev * 0.8, mean_log_sev * 1.2, n_states)
-    sigmas = np.full(n_states, std_log_sev)
-    
-    return pi, A, lambdas, mus, sigmas
+def build_log_emissions(counts, logsev, sev_mask, lambdas, mus, sigmas):
+    """
+    Build T x K log-emission matrix:
+      - Always includes Poisson(counts | λ_k)
+      - Adds LogNormal(exp(logsev) | μ_k, σ_k) ONLY where severity is observed (sev_mask True)
+    """
+    T = len(counts)
+    K = len(lambdas)
+    log_b = np.zeros((T, K))
+    # precompute observed-severity levels once
+    x_obs = np.exp(logsev[sev_mask])
+    for k in range(K):
+        # frequency term for all t
+        log_b[:, k] = log_poisson_pmf(counts, lambdas[k])
+        # severity term only where observed
+        sev_term_obs = log_lognormal_pdf(x_obs, mus[k], sigmas[k])
+        tmp = np.zeros(T)
+        tmp[sev_mask] = sev_term_obs
+        log_b[:, k] += tmp
+    return log_b
 
-def forward_backward(counts, sev, pi, A, lambdas, mus, sigmas):
-    """Run forward-backward and return gamma, xi, and log-likelihood."""
+# ---------- filtered posterior at T ----------
+def filtered_posterior_at_T(counts, logsev, sev_mask, pi, A, lambdas, mus, sigmas):
+    """
+    Compute P(S_T | data_{1:T}) via forward recursion (alpha) and normalizing at T.
+    Returns (posterior_T, log_likelihood, T_index).
+    """
     T = len(counts)
     K = len(pi)
-    
-    # Emission log-probs
-    log_b = np.zeros((T, K))
-    for k in range(K):
-        log_b[:, k] = log_poisson_pmf(counts, lambdas[k]) + log_lognormal_pdf(sev, mus[k], sigmas[k])
-    
-    # Forward
+    log_b = build_log_emissions(counts, logsev, sev_mask, lambdas, mus, sigmas)
+
+    # forward (log-alpha)
     log_alpha = np.zeros((T, K))
     log_alpha[0] = np.log(pi + 1e-16) + log_b[0]
     for t in range(1, T):
-        for j in range(K):
-            log_alpha[t, j] = log_b[t, j] + logsumexp(log_alpha[t-1] + np.log(A[:, j] + 1e-16))
-    
-    # Backward
-    log_beta = np.zeros((T, K))
-    for t in range(T-2, -1, -1):
-        for i in range(K):
-            log_beta[t, i] = logsumexp(np.log(A[i] + 1e-16) + log_b[t+1] + log_beta[t+1])
-    
-    # Gamma: smoothed posterior P(S_t = k | data)
-    log_gamma = log_alpha + log_beta
-    log_gamma_norm = logsumexp(log_gamma, axis=1, keepdims=True)
-    gamma = np.exp(log_gamma - log_gamma_norm)
-    
-    # Xi not needed for posterior at T
-    ll = logsumexp(log_alpha[-1])
-    return gamma, ll
+        # for each next-state j, sum over previous i
+        log_alpha[t] = log_b[t] + logsumexp(log_alpha[t-1][:, None] + np.log(A + 1e-16), axis=0)
 
-def m_step(counts, sev, gamma, xi):
-    """M-step: update parameters."""
-    T, K = gamma.shape
-    log_sev = np.log(sev)
-    
-    # Update pi
-    pi_new = gamma[0]
-    
-    # Update A
-    A_new = xi.sum(axis=0) / gamma[:-1].sum(axis=0, keepdims=True).T
-    
-    # Update emissions
-    lambdas_new = (gamma * counts[:, None]).sum(axis=0) / gamma.sum(axis=0)
-    mus_new = (gamma * log_sev[:, None]).sum(axis=0) / gamma.sum(axis=0)
-    sigmas_new = np.sqrt(((gamma * (log_sev[:, None] - mus_new)**2).sum(axis=0)) / gamma.sum(axis=0))
-    
-    return pi_new, A_new, lambdas_new, mus_new, sigmas_new
+    # filtered posterior at T = normalize alpha_T
+    log_alpha_T = log_alpha[-1]
+    posterior_T = np.exp(log_alpha_T - logsumexp(log_alpha_T))
+    ll = logsumexp(log_alpha[-1])  # sequence log-likelihood (optional)
+    return posterior_T, ll, T-1
 
-def run_em_and_posterior(input_path, max_iter=100, tol=1e-4):
-    # Load aggregated data
-    df = pd.read_csv(input_path, parse_dates=['quarter_start']).sort_values('quarter_start')
-    counts = df['n_claims'].values
-    severity = np.exp(df['avg_log_severity'].values)
-    
-    # Initialize parameters
-    pi, A, lambdas, mus, sigmas = initialize_parameters(counts, severity)
-    
-    # EM loop for parameters only
-    for i in range(max_iter):
-        # E-step
-        gamma, ll = forward_backward(counts, severity, pi, A, lambdas, mus, sigmas)
-        # We skip xi calc and m_step since we only need posterior; assume parameters are pre-fitted
-        # If parameters need fitting, include xi and m_step here
-        
-        # Convergence check on ll (if fitting)
-        # ...
-        pass
-    
-    # Compute filtered posterior at final time T
-    gamma, ll = forward_backward(counts, severity, pi, A, lambdas, mus, sigmas)
-    posterior_T = gamma[-1]
-    print(f"P(S_T = low-risk | data)  = {posterior_T[0]:.4f}")
-    print(f"P(S_T = high-risk| data)  = {posterior_T[1]:.4f}")
+def main(agg_path="aggregated_quarterly.csv", params_path="hmm_params.json"):
+    # load data
+    df = pd.read_csv(agg_path, parse_dates=["quarter_start"]).sort_values("quarter_start")
+    counts = df["n_claims"].astype(int).to_numpy()
+    logsev = df["avg_log_severity"].to_numpy(dtype=float)
+    sev_mask = ~np.isnan(logsev)
+
+    # load fitted params
+    with open(params_path, "r") as f:
+        P = json.load(f)
+    pi = np.asarray(P["pi"], dtype=float)
+    A = np.asarray(P["A"], dtype=float)
+    lambdas = np.asarray(P["lambdas"], dtype=float)
+    mus = np.asarray(P["mus"], dtype=float)
+    sigmas = np.asarray(P["sigmas"], dtype=float)
+
+    # sanity checks
+    if pi.shape[0] != 2 or A.shape != (2, 2):
+        raise ValueError("Expected 2-state HMM params. Got pi.shape={}, A.shape={}".format(pi.shape, A.shape))
+    # normalize just in case
+    A = A / A.sum(axis=1, keepdims=True)
+    pi = pi / pi.sum()
+
+    # compute filtered posterior at T
+    post_T, ll, idx_T = filtered_posterior_at_T(counts, logsev, sev_mask, pi, A, lambdas, mus, sigmas)
+    asof = df.iloc[idx_T]["quarter_start"]
+
+    print(f"As-of quarter (T): {asof:%Y-%m-%d}")
+    print(f"Sequence log-likelihood: {ll:.4f}")
+    print(f"P(S_T = low-risk | data)  = {post_T[0]:.4f}")
+    print(f"P(S_T = high-risk| data)  = {post_T[1]:.4f}")
+
+    # optional: save to JSON for downstream simulation seeding
+    out = {
+        "as_of_quarter": str(asof.date()),
+        "posterior_T": {"low": float(post_T[0]), "high": float(post_T[1])},
+        "log_likelihood": float(ll)
+    }
+    with open("posterior_at_T.json", "w") as f:
+        json.dump(out, f, indent=2)
+    print("Saved posterior -> posterior_at_T.json")
 
 if __name__ == "__main__":
-    run_em_and_posterior("aggregated_quarterly.csv")
+    # CLI usage:
+    #   python posterior_at_asofdate.py
+    #   python posterior_at_asofdate.py <aggregated_quarterly.csv> <hmm_params.json>
+    if len(sys.argv) == 1:
+        main()
+    elif len(sys.argv) == 2:
+        main(agg_path=sys.argv[1])
+    else:
+        main(agg_path=sys.argv[1], params_path=sys.argv[2])
 
 ## example usage: python3 posterior_at_asofdate.py
