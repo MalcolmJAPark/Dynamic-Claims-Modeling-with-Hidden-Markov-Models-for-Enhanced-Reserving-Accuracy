@@ -1,0 +1,41 @@
+aggregate_quarterly.py
+This script transforms cleaned FEMA NFIP claims data into a **quarterly time series** suitable for Hidden Markov Model (HMM) fitting, while preserving correct claim frequency, severity, and exposure measures.
+
+Functionality:
+
+* Loads the cleaned dataset (`combined_data_clean.csv`) and parses claim dates.
+* Assigns each claim to a **calendar quarter**.
+* Calculates **total severity** per claim as:
+  ```
+  netBuildingPaymentAmount + netContentsPaymentAmount
+  ```
+* Derives **log severity** for positive severity claims only.
+* Aggregates by quarter:
+  * `n_claims`: Number of unique claim IDs (zero-paid claims still count).
+  * `pos_claims`: Number of claims with positive severity.
+  * `zero_paid_claims`: Number of claims with zero severity.
+  * `avg_log_severity`: Mean log severity for positive claims only.
+* Computes **policy exposure**:
+  * Takes the median of *distinct* `policyCount` values per quarter (avoids overcounting from repeated claim rows).
+  * Tracks number of distinct `policyCount` values observed (`n_distinct_policyCount`) for data quality checks.
+* Optionally fills missing `avg_log_severity` values via forward/backward interpolation to prevent EM algorithm issues.
+* Produces:
+  * `quarter`, `quarter_start`
+  * Frequency metrics
+  * Severity metrics
+  * Exposure metrics
+
+Usage Example:
+
+```bash
+python3 aggregate_quarterly.py
+```
+
+(Default input: `combined_data_clean.csv`; output: `aggregated_quarterly.csv`)
+
+Purpose in Project:
+Creates a **structured quarterly dataset** that feeds directly into the HMM training process, ensuring accurate regime detection and reserve forecasting by:
+
+* Properly counting claims
+* Separating zero-paid from positive-paid claims
+* Capturing stable policy exposure measures
