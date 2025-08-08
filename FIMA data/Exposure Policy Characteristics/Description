@@ -1,0 +1,27 @@
+expo_pol.py
+This script retrieves **exposure-related policy fields** for a given list of FEMA NFIP claim IDs and saves them to a CSV file.
+
+Functionality:
+
+* Reads claim IDs from an input file (one per line).
+* Fetches the following fields from the **FEMA NFIP Redacted Claims API**:
+  * `id`
+  * `policyCount`
+  * `state`
+  * `totalBuildingInsuranceCoverage`
+  * `totalContentsInsuranceCoverage`
+* Handles large ID lists by chunking API requests (default: 25 IDs per request).
+* Writes results to a CSV file, ensuring the header is included only once.
+
+Usage Example:
+
+```bash
+python3 expo_poly.py --ids-file ids.txt --out exposure.csv --chunk-size 25
+```
+
+* `--ids-file`: Path to file containing claim IDs (one per line).
+* `--out`: Output CSV filename (default: `exposure.csv`).
+* `--chunk-size`: Number of IDs per API request (default: 25).
+
+Purpose in Project:
+Provides **policy exposure data**—such as insured amounts and policy counts—which is used in the claims modeling pipeline to normalize frequency/severity metrics and enhance risk state classification.
