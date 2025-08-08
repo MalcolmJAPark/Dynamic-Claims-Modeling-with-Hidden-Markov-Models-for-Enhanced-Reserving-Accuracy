@@ -1,0 +1,30 @@
+struc_risk.py
+This script retrieves **structural/risk attributes** and **claim payment details** for a given list of FEMA NFIP claim IDs, saving the results as a CSV file.
+
+Functionality:
+
+* Reads claim IDs from an input file (one per line).
+* Retrieves the following fields from the **FEMA NFIP Redacted Claims API**:
+  * `id`
+  * `ratedFloodZone`
+  * `elevationDifference`
+  * `postFIRMConstructionIndicator`
+  * `primaryResidenceIndicator`
+  * `amountPaidOnBuildingClaim`
+  * `amountPaidOnContentsClaim`
+  * `amountPaidOnIncreasedCostOfComplianceClaim`
+* Handles large lists of IDs by chunking requests (default: 25 IDs per request).
+* Writes results to a CSV file, ensuring the header is included only once.
+
+Usage Example:
+
+```bash
+python3 struc_risk.py --ids-file ids.txt --out structural.csv --chunk-size 25
+```
+
+* `--ids-file`: File containing claim IDs, one per line.
+* `--out`: Output CSV filename (default: `structural.csv`).
+* `--chunk-size`: Number of IDs per API request (default: 25).
+
+**Purpose in Project:**
+Collects **property risk characteristics** and **payment amounts** for claims, enabling analysis of how structural and policy attributes influence claim frequency, severity, and latent state modeling.
