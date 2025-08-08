@@ -1,0 +1,99 @@
+"""
+strict_ibnr_at_T.py
+====================================
+
+Purpose
+-------
+Compute **strict IBNR at the valuation quarter T** (i.e., claims **incurred on or
+before T** but **not yet reported by T**). This **does not** simulate future
+occurrences after T; use `simulate_ibnr_reserves.py` for “ultimate next-H”.
+
+What it does
+------------
+1) Loads the quarterly aggregated data (`aggregated_quarterly.csv`).
+2) Loads fitted 2-state HMM parameters (`hmm_params.json`) and/or Viterbi
+   states (`decoded_quarterly_with_states.csv`). If missing, it **fits** a
+   joint HMM (Poisson for frequency + LogNormal for severity) and decodes
+   states, while safely handling **quarters with missing severity**.
+3) For each historical quarter `t ≤ T`, applies **Binomial thinning** to the
+   **observed** counts `N_t` using the **reporting-lag tail probability**
+   `P(L > T−t)`:
+      U_t ~ Binomial(n = N_t, p = P(L > T−t))
+   These `U_t` are the claims incurred by `t` that are still **unreported** at `T`.
+4) For each unreported claim, draws a severity from the **state-at-t**
+   LogNormal distribution, and (optionally) discounts by the **excess delay
+   beyond T**: `(1+r)^-(L − (T−t))`, where `L` is a lag drawn **conditional on**
+   `L > T−t`.
+5) Repeats via Monte Carlo to produce an **IBNR distribution at T** and prints
+   percentiles; also writes the path-level reserves to CSV.
+
+Inputs / Files
+--------------
+- `aggregated_quarterly.csv`
+    Must contain at least:
+      * `quarter_start` (datetime)
+      * `n_claims` (int)
+      * `avg_log_severity` (float; may be NaN when no positive payments)
+- `hmm_params.json` (optional)
+    Fitted HMM parameters:
+      {
+        "pi": [p0, p1],
+        "A": [[...],[...]],
+        "lambdas": [λ_low, λ_high],
+        "mus":     [μ_low, μ_high],   # log-mean for LogNormal
+        "sigmas":  [σ_low, σ_high]    # log-std  for LogNormal
+      }
+- `decoded_quarterly_with_states.csv` (optional)
+    Viterbi-decoded state per quarter. If absent, states are decoded on the fly.
+
+CLI
+---
+    python strict_ibnr_at_T.py
+           [--agg aggregated_quarterly.csv]
+           [--params hmm_params.json]
+           [--states decoded_quarterly_with_states.csv]
+           [-N / --npaths 5000]
+           [-r / --rate 0.0]
+           [--delay-ds 0 1 2 3 4]
+           [--delay-ps 0.50 0.30 0.10 0.07 0.03]
+           [--seed 2025]
+
+Key Arguments
+-------------
+- --agg : Path to aggregated quarterly data (default: aggregated_quarterly.csv).
+- --params : HMM params JSON; if missing the script **fits** EM and saves nothing.
+- --states : Decoded states CSV; if missing, states are decoded from params.
+- -N / --npaths : Number of Monte Carlo paths (default: 5000).
+- -r / --rate : Per-quarter discount rate (default: 0.0).
+- --delay-ds / --delay-ps : Discrete reporting-lag support and probabilities
+  (renormalized internally). Used to (i) compute `P(L > T−t)` and (ii) draw
+  conditional lags for discounting beyond T.
+- --seed : RNG seed (default: 2025).
+
+Outputs
+-------
+- Console percentiles for **strict IBNR at T (PV)**: 50/75/90/95/99.
+- `strict_ibnr_reserves.csv` — path-level simulated PV reserves at T.
+
+Notes & Assumptions
+-------------------
+- **Strict IBNR** here uses **Binomial thinning of observed counts**:
+  it does **not** use Poisson thinning of λ (that would be a model-based
+  expectation, not the realized incurred history).
+- Severity is LogNormal by state; quarters with missing `avg_log_severity`
+  contribute only the frequency term to the HMM fit/decoding.
+- If your delay distribution has maximum support `D`, only the last `D+1`
+  quarters can contribute to IBNR at `T`.
+- For “ultimate next-H” reserves from **future** occurrences, use
+  `simulate_ibnr_reserves.py`.
+
+Example
+-------
+    # Simple run: strict IBNR at T with default lag distribution and no discount
+    python3 strict_ibnr_at_T.py
+
+    # With 1% per-quarter discount and custom lag distribution
+    python3 strict_ibnr_at_T.py -N 10000 -r 0.01 \
+        --delay-ds 0 1 2 3 4 5 \
+        --delay-ps 0.40 0.30 0.15 0.08 0.05 0.02
+"""
