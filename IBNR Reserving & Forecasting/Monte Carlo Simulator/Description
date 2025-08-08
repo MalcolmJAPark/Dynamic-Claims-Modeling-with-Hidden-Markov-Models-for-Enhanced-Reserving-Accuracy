@@ -1,0 +1,107 @@
+"""
+simulate_ibnr_reserves.py
+====================================
+
+Purpose
+-------
+Monte Carlo simulator for **Ultimate reserves over the next H quarters** (future
+occurrences after the cut-off quarter T). This is **not** strict IBNR-at-T
+(use `strict_ibnr_at_T.py` for that). The simulator:
+
+1) Reads fitted 2-state HMM parameters (`hmm_params.json`) and the filtered
+   posterior at the cut-off (`posterior_at_T.json`).
+2) Seeds each path’s state at T using P(S_T | data) and simulates the latent
+   state path forward H quarters via the transition matrix A.
+3) Conditional on each state, simulates claim **counts** (Poisson with λ_low/λ_high)
+   and claim **severities** (Log-Normal by default, or Gamma if requested).
+4) Aggregates per-path, per-horizon totals, and computes **Ultimate** reserves
+   (optionally present-valued).
+5) Optionally discounts each claim by its **time-to-payment** using
+   (h + reporting_lag), where `h` is the horizon (1..H) and `reporting_lag`
+   is drawn from an empirical discrete distribution G(d).
+
+Key Inputs (files)
+------------------
+- `hmm_params.json` : Fitted parameters from your HMM training step.
+    {
+      "pi": [p0, p1],
+      "A": [[...],[...]],        # 2x2 transition matrix (rows will be normalized)
+      "lambdas": [λ_low, λ_high],
+      "mus":     [μ_low, μ_high],       # if severity='lognormal' → log-mean
+      "sigmas":  [σ_low, σ_high]        # if severity='lognormal' → log-std
+    }
+
+- `posterior_at_T.json` : Filtered posterior at the cut-off T produced by
+  `posterior_at_asofdate.py`.
+    {
+      "as_of_quarter": "YYYY-MM-DD",
+      "posterior_T": {"low": p0_T, "high": p1_T}
+    }
+
+CLI
+---
+    python simulate_ibnr_reserves.py [N] [H] [r]
+                                     [--severity {lognormal,gamma}]
+                                     [--discount-by-reporting-lag]
+                                     [--delay-ds 0 1 2 3 4]
+                                     [--delay-ps 0.50 0.30 0.10 0.07 0.03]
+                                     [--seed 2025]
+
+Arguments
+---------
+- N : int (default 5000)
+    Number of Monte Carlo paths.
+- H : int (default 8)
+    Number of future quarters to simulate beyond the cut-off T.
+- r : float (default 0.0)
+    Per-quarter discount rate for PV calculations.
+
+Options
+-------
+- --severity {lognormal,gamma} (default: lognormal)
+    Severity model per state. If `gamma`, `mus` are treated as **shape** and
+    `sigmas` as **scale**.
+- --discount-by-reporting-lag
+    If set, each claim is discounted by (h + L) rather than just h, where
+    L ~ G(d) with support/probabilities passed via `--delay-ds/--delay-ps`.
+    (By default, totals at horizon h are discounted by (1+r)^(-h) only.)
+- --delay-ds / --delay-ps
+    Support and probabilities for the discrete reporting-lag distribution G(d).
+    Used only when `--discount-by-reporting-lag` is provided. Probabilities are
+    renormalized internally.
+- --seed
+    RNG seed for reproducibility.
+
+Outputs
+-------
+- `simulated_claims.csv`
+    Long table with per-path, per-horizon totals:
+      path, horizon, state, n_claims, total_loss
+    (horizon runs 1..H; column for h=0 is not written because it’s the cut-off.)
+
+- `simulated_reserves_summary.json`
+    Summary of **present-value** Ultimate reserves over 1..H, including
+    percentiles {50, 75, 90, 95, 99} and echo of input settings.
+
+Notes & Assumptions
+-------------------
+- This script estimates **Ultimate over next H** quarters (future occurrences).
+  For **strict IBNR at T**—i.e., incurred prior to T but unreported at T—use
+  `strict_ibnr_at_T.py` (which applies **binomial thinning** to historical counts).
+- Counts are currently **Poisson** per state. If your data are over-dispersed,
+  consider swapping to Negative Binomial.
+- When `--discount-by-reporting-lag` is enabled, per-horizon totals are split
+  **uniformly** across that horizon’s claims for discounting by distinct lags.
+  If you need exact per-claim discounting, extend the simulator to emit
+  per-claim cashflows (claim-level severities and lags) and discount those
+  directly.
+
+Example
+-------
+    # Ultimate over next 8 quarters, no discounting
+    python simulate_ibnr_reserves.py 5000 8 0.0
+
+    # With per-claim discounting by reporting lag at 1% per quarter
+    python simulate_ibnr_reserves.py 5000 8 0.01 --discount-by-reporting-lag \
+        --delay-ds 0 1 2 3 4 --delay-ps 0.50 0.30 0.10 0.07 0.03
+"""
