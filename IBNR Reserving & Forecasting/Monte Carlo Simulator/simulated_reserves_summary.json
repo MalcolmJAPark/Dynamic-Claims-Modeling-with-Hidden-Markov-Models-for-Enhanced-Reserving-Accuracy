@@ -1,0 +1,15 @@
+{
+  "as_of_quarter": "2025-01-01",
+  "N": 5000,
+  "H": 8,
+  "discount_rate_per_quarter": 0.0,
+  "severity_dist": "lognormal",
+  "discount_by_reporting_lag": true,
+  "reserve_pv_percentiles": {
+    "50": 1289824.1713487608,
+    "75": 1948150.7984073092,
+    "90": 2557018.5813097474,
+    "95": 2960438.012275211,
+    "99": 3776559.5919068395
+  }
+}
