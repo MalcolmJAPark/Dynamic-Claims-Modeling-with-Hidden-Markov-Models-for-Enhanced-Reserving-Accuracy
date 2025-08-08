@@ -79,3 +79,5 @@ simulate_ibnr_reserves.py:
 6. Compute percentile summaries of the reserve distribution.
 7. Save the detailed path‐level results to 'simulated_reserves.csv'.
 
+simulate_ibnr_reserves.py is really forward "next-H" ultimate: we simulate future occurrences and treat all of them as "IBNR at T". While useful for planning not strict IBNR.
+The script strict_ibnr_at_T.py computes strict IBNR at the valuation date T: only claims already incurred by T but not yet reported (based on the lag tail P(L>T−t)).
