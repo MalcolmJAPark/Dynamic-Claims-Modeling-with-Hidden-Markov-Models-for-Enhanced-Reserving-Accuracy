@@ -1,0 +1,30 @@
+drop_null_entries.py
+This script cleans the merged FEMA NFIP claims dataset by removing rows with missing values in key columns required for Hidden Markov Model (HMM) analysis.
+
+Functionality:
+
+* Loads the input CSV (e.g., `combined_data.csv`), parsing `dateOfLoss` and `asOfDate` as dates.
+* Defines a list of **necessary columns**:
+  * `id`
+  * `dateOfLoss`
+  * `asOfDate`
+  * `policyCount`
+  * `netBuildingPaymentAmount`
+  * `netContentsPaymentAmount`
+  * `state`
+  * `ratedFloodZone`
+  * `elevationDifference`
+  * `postFIRMConstructionIndicator`
+  * `primaryResidenceIndicator`
+* Drops any row that contains a null value in one or more of these columns.
+* Saves the cleaned dataset to the specified output CSV.
+* Prints the number of dropped entries.
+
+Usage Example:
+
+```bash
+python3 drop_null_entries.py combined_data.csv combined_data_clean.csv
+```
+
+Purpose in Project:
+Ensures the dataset has complete information for all fields necessary to fit the HMM model, preventing errors during statistical modeling and improving result reliability.
