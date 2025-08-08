@@ -59,3 +59,23 @@ severities via Log-Normal and aggregates into a DataFrame with columns (path, ho
 Then, it returns simulated-claims.csv and full Monte Carlo sample of future counts and losses.
 
 
+Next step is to translate the following sample cash-flows into IBNR reserves for each simulation path. Essentially, this process can be broken down into two steps:
+1. Allocate each simulated claim to "reported" vs. "unreported". Need claim-reporting delay model - e.g., an empirical delay distribution G(d) giving the probability a claim is reported 
+d quarters after occurence. Then for each individual claim in simulation:
+    * draw a reporting lag L^(j)_{i,h} ~ G(d) for the jth claim in path i, quarter T+h
+    * determine if it's IBNR at the valuation date, meaning any claim that occurs in quarter T+h and is drawn to report at T+h+L is still unreported as of cut-off T if T+h+L > T --> h+L>0.
+    So we flag it as IBNR whenever L^(j)_{i,h} > -h.
+    * Sum the "late" severities, meaning for each path i we define IBNR_i = sum^H_{h=1} sum^{N_{i,h}}_j=1 1{L^(j)_{i,h} > -h} X^(j)_{i,h}.
+2. Discount and aggregate to get a reserve distribution. Once we have {IBNR}^N_i=1:
+    * present-value discounting (if required)
+    * Empirical summaries, meaning compute Quantile_a = the ath percentile of {IBNR_i}
+
+simulate_ibnr_reserves.py:
+1. Simulate initial latent states at the cut‐off and future trajectories.
+2. Draw claim counts and severities per state and quarter.
+3. Sample reporting delays from your empirical delay distribution G(d).
+4. Flag each claim as IBNR if L > -h (i.e. still unreported by cut‐off when it occurred at horizon h).
+5. Aggregate raw and present‐value reserves per Monte Carlo path.
+6. Compute percentile summaries of the reserve distribution.
+7. Save the detailed path‐level results to 'simulated_reserves.csv'.
+
