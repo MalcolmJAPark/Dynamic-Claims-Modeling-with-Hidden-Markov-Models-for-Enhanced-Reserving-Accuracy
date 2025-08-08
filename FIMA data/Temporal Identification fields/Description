@@ -1,0 +1,23 @@
+temp_ident.py
+This script retrieves selected metadata fields (`id`, `dateOfLoss`, `asOfDate`) for a list of FEMA NFIP claim IDs and saves them to a CSV file.
+
+Functionality:
+
+* Reads claim IDs from an input file (one per line).
+* Splits IDs into chunks to comply with API request limits.
+* Sends requests to the **FEMA NFIP Redacted Claims API** with a filter to retrieve only the specified IDs.
+* Streams CSV data from the API and writes it to an output file.
+* Ensures the CSV header is written only once, even across multiple chunked requests.
+
+Usage Example:
+
+```bash
+python3 temp_ident.py --ids-file ids.txt --out claims.csv --chunk-size 25
+```
+
+* `--ids-file`: Path to file containing claim IDs (one per line).
+* `--out`: Output CSV filename (default: `claims.csv`).
+* `--chunk-size`: Number of IDs per API request (default: `25`).
+
+Purpose in Project:
+Acts as a **data retrieval step** in the claims modeling pipeline by fetching loss date and snapshot date for specific claim records, which can be used for time-based aggregation, analysis, and state modeling.
