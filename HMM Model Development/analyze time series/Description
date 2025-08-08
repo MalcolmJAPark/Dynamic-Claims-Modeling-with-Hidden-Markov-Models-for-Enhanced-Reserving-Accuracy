@@ -1,0 +1,57 @@
+analyze_time_series.py
+This script performs **exploratory analysis** on the quarterly aggregated claims dataset, computing summary statistics, detecting outliers, and visualizing time series trends and seasonal patterns.
+
+Functionality:
+
+1. **Load & Prepare Data**
+
+   * Reads the quarterly aggregated dataset (e.g., `aggregated_quarterly.csv`).
+   * Parses `quarter_start` dates and sorts chronologically.
+
+2. **Summary Statistics**
+
+   * Calculates mean and variance for:
+
+     * `n_claims` (quarterly claim counts)
+     * `avg_log_severity` (average log severity of positive claims)
+
+3. **Outlier Detection**
+
+   * Uses **z-scores** (`|z| > 3`) to detect quarters with unusually high/low values for claim counts and severity.
+   * Prints the list of outlier quarters.
+
+4. **Time Series Visualization**
+
+   * **n\_claims**:
+
+     * Plots quarterly counts with a 4-quarter moving average.
+     * Highlights detected outliers.
+     * Saves plot to `n_claims_time_series.png`.
+   * **avg\_log\_severity**:
+
+     * Plots quarterly average log severity with a 4-quarter moving average.
+     * Highlights detected outliers.
+     * Saves plot to `avg_log_severity_time_series.png`.
+
+5. **Seasonality Analysis**
+
+   * Groups data by **quarter of year** (1–4).
+   * Plots average values for:
+
+     * Claim counts (`n_claims_seasonality.png`)
+     * Average log severity (`avg_log_severity_seasonality.png`)
+
+Usage Example:
+
+```bash
+python3 analyze_time_series.py
+```
+
+(Default input: `aggregated_quarterly.csv`)
+
+Purpose in Project:
+Provides **initial statistical insight and visual diagnostics** before fitting the HMM, helping identify:
+
+* Outliers that may distort model fitting
+* Long-term trends in claims
+* Seasonal patterns that could influence state transitions
