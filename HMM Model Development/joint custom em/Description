@@ -1,0 +1,77 @@
+joint_hmm_em.py
+This script fits a **joint frequency–severity Hidden Markov Model** using the Expectation–Maximization (EM) algorithm, where:
+
+* **Claim frequency** is modeled with a Poisson distribution.
+* **Claim severity** (average log severity) is modeled with a Log-Normal distribution.
+
+It then decodes the most likely latent state sequence with the Viterbi algorithm and saves both the state sequence and model parameters.
+
+Functionality:
+
+1. **Custom Probability Functions**
+
+   * Implements log-space versions of:
+
+     * Poisson PMF (`log_poisson_pmf`)
+     * Log-Normal PDF (`log_lognormal_pdf`)
+   * Combines them in `build_log_emissions()` to produce **log emission probabilities** for each time step and state, including only severity terms where severity data is observed.
+
+2. **EM Algorithm**
+
+   * **E-step (`e_step`)**:
+
+     * Forward–backward pass in log space for numerical stability.
+     * Computes posterior state probabilities (`gamma`) and state transition posteriors (`xi`).
+     * Returns the log-likelihood for convergence tracking.
+   * **M-step (`m_step`)**:
+
+     * Updates:
+
+       * Initial state distribution (`pi`)
+       * Transition matrix (`A`)
+       * Poisson means (`λ`)
+       * Log-Normal means (`μ`) and standard deviations (`σ`)
+     * Uses only rows with observed severity for severity updates.
+   * **`fit_em()`**:
+
+     * Initializes parameters for a 2-state model.
+     * Iteratively runs E-step and M-step until log-likelihood change is below `tol` or `max_iter` is reached.
+     * Returns fitted parameters and log-likelihood history.
+
+3. **Viterbi Decoding**
+
+   * `viterbi()` finds the most probable sequence of hidden states given the fitted parameters.
+
+4. **Main Script Workflow**
+
+   * Loads `aggregated_quarterly.csv`.
+   * Extracts:
+
+     * `n_claims` as Poisson observations.
+     * `avg_log_severity` as Log-Normal observations.
+     * `sev_mask` marking quarters with observed severity.
+   * Fits the joint HMM using EM.
+   * Prints fitted parameters:
+
+     * Initial state distribution (`pi`)
+     * Transition matrix (`A`)
+     * Poisson rates (`λ`)
+     * Log-Normal parameters (`μ`, `σ`)
+   * Runs Viterbi to assign each quarter to a latent state.
+   * Saves:
+
+     * `decoded_quarterly_with_states.csv` (with state assignments).
+     * `hmm_params.json` (fitted parameters and log-likelihood history).
+
+Usage Example:
+
+```bash
+python3 joint_hmm_em.py
+```
+
+**Purpose in Project:**
+Captures **both** frequency and severity dynamics in claims data, enabling:
+
+* Better discrimination between low- and high-risk periods.
+* More accurate reserve estimation (IBNR).
+* State decoding for further scenario simulations and Monte Carlo reserve projections.
